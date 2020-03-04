@@ -13,6 +13,7 @@ void exec_pipe(cli::exec_unit from, cli::exec_unit to);
 void cli_cat_stdin(cli::exec_unit eunit);
 void cli_wc(cli::exec_unit eunit);
 void cli_wc_stdin(cli::exec_unit eunit);
+void exec_np(cli::exec_unit from);
 
 builtin_t builtin(cli::token tok);
 

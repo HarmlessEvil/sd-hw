@@ -46,9 +46,8 @@ void execute(cli::exec_list exc, cli::env_t &env)
         case ext:
             exit(0);
             break;
-
         default:
-            std::cout << "Invalid input" << std::endl;
+            exec_np(eunit);
             return;
         }
     }
@@ -216,6 +215,23 @@ void cli_wc_stdin(cli::exec_unit eunit)
     }
 
     std::cout << lines << " " << bytes << std::endl;
+}
+
+void exec_np(cli::exec_unit from)
+{
+    std::vector<char *> from_args;
+    for (int index = 0; index < from.size(); ++index)
+    {
+        from_args.push_back(const_cast<char *>(from[index].c_str()));
+    }
+    from_args.push_back(nullptr);
+
+    if (fork() == 0)
+    {
+        execvp(from_args[0], &from_args[0]);
+    }
+
+    wait(NULL);
 }
 
 void exec_pipe(cli::exec_unit from, cli::exec_unit to)
