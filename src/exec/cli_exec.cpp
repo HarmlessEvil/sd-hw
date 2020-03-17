@@ -9,6 +9,7 @@
 #include <wait.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <memory>
 
 namespace cli_exec
 {
@@ -133,7 +134,14 @@ void cli_pwd(cli::exec_unit eunit)
     {
         throw std::logic_error("pwd call fail");
     }
-    std::cout << getenv("PWD") << std::endl;
+    size_t buf_size = 1024;
+    auto buf = std::make_unique<char[]>(buf_size);
+    if (getcwd(buf.get(), buf_size) != nullptr)
+    {
+        std::cout << buf.get() << std::endl;
+    };
+
+    return;
 }
 
 void cli_echo(cli::exec_unit eunit)
@@ -228,7 +236,11 @@ void exec_np(cli::exec_unit from)
 
     if (fork() == 0)
     {
-        execvp(from_args[0], &from_args[0]);
+        if (execvp(from_args[0], &from_args[0]))
+        {
+            std::cout << "No such command" << std::endl;
+            exit(1);
+        };
     }
 
     wait(NULL);
