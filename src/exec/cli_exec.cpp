@@ -6,10 +6,11 @@
 #include <vector>
 #include <algorithm>
 #include <fstream>
-#include <wait.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <memory>
+#include <filesystem>
 
 namespace cli_exec
 {
@@ -43,6 +44,12 @@ void execute(cli::exec_list exc, cli::env_t &env)
             break;
         case pwd:
             cli_pwd(eunit);
+            break;
+        case cd:
+            cli_cd(eunit);
+            break;
+        case ls:
+            cli_ls(eunit);
             break;
         case ext:
             exit(0);
@@ -142,6 +149,49 @@ void cli_pwd(cli::exec_unit eunit)
     };
 
     return;
+}
+
+void cli_cd(cli::exec_unit eunit)
+{
+    if (eunit.empty() || eunit.front() != "cd")
+    {
+        throw std::logic_error("cd call fail");
+    }
+
+    if (eunit.size() == 1)
+    {
+        return;
+    }
+
+    if (eunit.size() > 2)
+    {
+        std::cout << "invalid input to cd" << std::endl;
+    }
+
+    if (chdir(eunit[1].c_str()) != 0)
+    {
+        std::cout << "no such directory " + eunit[1] << std::endl;
+    }
+
+    return;
+}
+
+void cli_ls(cli::exec_unit eunit)
+{
+    if (eunit.empty() || eunit.front() != "ls")
+    {
+        throw std::logic_error("ls call fail");
+    }
+
+    if (eunit.size() > 2)
+    {
+        std::cout << "invalid input to ls" << std::endl;
+    }
+
+    std::string path = eunit.size() == 2 ? eunit[1] : ".";
+    for (const auto &entry : std::filesystem::directory_iterator(path)) {
+        std::cout << entry.path().stem().string() << std::endl;
+    }
 }
 
 void cli_echo(cli::exec_unit eunit)
@@ -288,6 +338,12 @@ void exec_pipe(cli::exec_unit from, cli::exec_unit to)
         case pwd:
             cli_pwd(from);
             break;
+        case cd:
+            cli_cd(from);
+            break;
+        case ls:
+            cli_ls(from);
+            break;
         case ext:
             exit(0);
         default:
@@ -311,6 +367,12 @@ void exec_pipe(cli::exec_unit from, cli::exec_unit to)
                 break;
             case wc:
                 cli_wc_stdin(to);
+                break;
+            case cd:
+                cli_cd(from);
+                break;
+            case ls:
+                cli_ls(from);
                 break;
             case echo:
                 cli_echo(to);
@@ -360,6 +422,14 @@ builtin_t builtin(cli::token tok)
     else if (tok == "exit")
     {
         return ext;
+    }
+    else if (tok == "cd")
+    {
+        return cd;
+    }
+    else if (tok == "ls")
+    {
+        return ls;
     }
 
     return els;

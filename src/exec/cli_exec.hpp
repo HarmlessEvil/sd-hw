@@ -12,6 +12,8 @@ enum builtin_t
     wc,
     echo,
     ext,
+    cd,
+    ls,
     els
 };
 
