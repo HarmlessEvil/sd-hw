@@ -1,8 +1,13 @@
 #include "../src/CLI.hpp"
 #include "../src/lexparse/cli_lexer.hpp"
 #include "../src/lexparse/impl/cli_lexer_impl.hpp"
+#include "../src/exec/cli_exec.hpp"
 
 #include <gtest/gtest.h>
+
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
 TEST(LexParseTest, SanityCheckTest)
 {
@@ -307,4 +312,37 @@ TEST(LexPrs, PipeTests)
     enter = " ech |   |";
     opt = lexparse(enter, mp);
     EXPECT_FALSE(opt);
+}
+
+struct cout_redirect {
+    explicit cout_redirect(std::streambuf* new_buffer) : old(std::cout.rdbuf(new_buffer)) {}
+
+    ~cout_redirect() {
+        std::cout.rdbuf(old);
+    }
+
+private:
+    std::streambuf* old;
+};
+
+// Cannot test ls without cd, because it's undefined, which files will be in working directory
+TEST(CDLSTest, SmokeTest)
+{
+    std::stringstream buffer;
+
+    {
+        cout_redirect cout_redirect{buffer.rdbuf()};
+
+        std::filesystem::create_directory("tmp");
+        {
+            std::ofstream tmp_file("tmp/tmp_file");
+        }
+
+        cli::env_t env{};
+        cli_exec::execute({{"cd", "tmp"}}, env);
+        cli_exec::execute({{"ls"}}, env);
+    }
+    EXPECT_EQ("tmp_file\n", buffer.str());
+
+    std::filesystem::remove_all("tmp");
 }
