@@ -151,6 +151,7 @@ void cli_pwd(cli::exec_unit eunit)
     return;
 }
 
+// This command changes current working directory
 void cli_cd(cli::exec_unit eunit)
 {
     if (eunit.empty() || eunit.front() != "cd")
@@ -172,10 +173,10 @@ void cli_cd(cli::exec_unit eunit)
     {
         std::cout << "no such directory " + eunit[1] << std::endl;
     }
-
-    return;
 }
 
+// This command prints content of the current directory to console. If an argument is specified, it will be treated
+// as name of directory, which content will be printed to console
 void cli_ls(cli::exec_unit eunit)
 {
     if (eunit.empty() || eunit.front() != "ls")
@@ -189,8 +190,12 @@ void cli_ls(cli::exec_unit eunit)
     }
 
     std::string path = eunit.size() == 2 ? eunit[1] : ".";
-    for (const auto &entry : std::filesystem::directory_iterator(path)) {
-        std::cout << entry.path().stem().string() << std::endl;
+    if (std::filesystem::is_directory(path)) {
+        for (const auto &entry : std::filesystem::directory_iterator(path)) {
+            std::cout << entry.path().stem().string() << std::endl;
+        }
+    } else {
+        std::cerr << "No such directory: '" << path << "'" << std::endl;
     }
 }
 
